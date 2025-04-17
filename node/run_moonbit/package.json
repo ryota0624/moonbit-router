@@ -1,0 +1,13 @@
+{
+  "name": "run_moonbit",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.7",
+    "itty-router": "^5.0.18"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "import": [
+    "ryota0624/hello/lib"
+  ],
+  "targets": {
+    "top_only_js.mbt": [
+      "js"
+    ]
+  },
+  "link": {
+    "js": {
+      "exports": [
+        "greeting",
+        "greeting_later",
+        "handle_greeting"
+      ]
+    }
+  }
+}
