@@ -1,118 +1,119 @@
 ///|
-priv extern type JSTimer
-
-// TODO: web標準のreq/resを扱えるようにする
-
-///|
-// extern "js" fn text(self : Request, text : String) -> HonoResponse =
-//   #|(self, text) => self.text(text)
-
-// ///|
-// extern "js" fn invokeHonoContextMethod(
-//   self : Request,
-//   methodCall : String,
-//   param : String
-// ) -> HonoResponse =
-//   #|(self, methodCall, param) => self[methodCall](param)
-
-// ///|
-// extern "js" fn invokeHonoContextMethodWithJson(
-//   self : Request,
-//   methodCall : String,
-//   param : Json
-// ) -> HonoResponse =
-//   #|(self, methodCall, param) => self[methodCall](param)
-
-// struct WrappedHonoRequestContext {
-//   request: HonoRequestContext
-// }
-
-///|
-// extern "js" fn json(
-//   self : Request,
-//   methodCall : String,
-//   param : String
-// ) -> HonoResponse =
-//   #|(self, methodCall, param) => self[methodCall](JSON.parse(param))
-
-// ///|
-// extern "js" fn json2(
-//   self : Request,
-//   methodCall : String,
-//   param : AnyJsonData
-// ) -> HonoResponse =
-//   #|(self, methodCall, param) => self[methodCall](param)
-
-// ///|
-// fn json3(
-//   self : Request,
-//   methodCall : String,
-//   param : AnyJsonData
-// ) -> HonoResponse {
-//   self.json2(methodCall, param)
-// }
-
-///|
-struct Replay {
-  response : Int
-}
-
-extern type Request
-
-///|
-extern type Response
-
-
-struct HttpHeader {
-  name : String
-  value : String
-}
-///|
-extern "js" fn new_response_from_string(body : String, status_code: Int, response_header: Array[HttpHeader]) -> Response =
-  #| (body, status_code, response_header) => {
-  #|    const headers = Object.fromEntries(new Map(response_header.map(h => [
-  #|h.name, h.value])));
-  #|    return new Response(body, { status: status_code, headers: headers });
-  #|  }
-
-///|
-fn new_json_response(body : Json, status_code~: Int = 200, response_header~: Array[HttpHeader] = []) -> Response {
-  new_response_from_string(body.stringify(), status_code, response_header)
-}
-
-/// pub fn wrapHonoRequestContext(helloRequest: HonoRequestContext) -> WrappedHonoRequestContext {
-///   WrappedHonoRequestContext::{ request: helloRequest }
-/// }
-
-///|
-extern "js" fn js_set_timeout(f : () -> Unit, duration : Int) -> JSTimer =
-  #| (f, duration) => setTimeout(f, duration)
-
-///|
-pub fn greeting() -> Unit {
-  println(@lib.hello())
+pub trait Request {
+  bytes(Self, callback : (Result[FixedArray[Byte], Error]) -> Unit) -> Unit
+  text(Self, callback : (Result[String, Error]) -> Unit) -> Unit
+  json(Self, callback : (Result[Json, Error]) -> Unit) -> Unit
+  headers(Self) -> Headers
+  method_(Self) -> String
+  url(Self) -> String
+  referrer(Self) -> String
+  mode(Self) -> String
+  destination(Self) -> String
+  credentials(Self) -> String
+  integrity(Self) -> String
+  redirect(Self) -> String
+  referrerPolicy(Self) -> String
+  keepalive(Self) -> Bool
 }
 
 ///|
-pub fn greeting_later(callback : (String) -> Unit) -> Unit {
-  let _ = js_set_timeout(fn() { callback(@lib.hello()) }, 1000)
-
+pub trait Response {
+  new_from_string(
+    body : String,
+    status_code : Int,
+    response_header : Array[Header],
+  ) -> Self
+  new_from_json(
+    body : Json,
+    status_code~ : Int,
+    response_header~ : Array[Header],
+  ) -> Self
 }
 
 ///|
-pub fn handle_greeting(req : Request) -> Response {
-  new_json_response(
-    AnyJsonData::{ data: "Hello, world! from Moonbit", numbers: [23, 43, 0] }.to_json(),
-    status_code = 201,
-    response_header = [
-      { name: "Content-Type", value: "application/json" },
-      { name: "X-My-Header", value: "Hello, d!" }
-    ]
+impl Response with new_from_json(
+  body : Json,
+  status_code~ : Int,
+  response_header~ : Array[Header]
+) -> Self {
+  Response::new_from_string(
+    body.stringify(),
+    status_code,
+    [..response_header, { name: "Content-Type", value: "application/json" }],
   )
+}
+
+///|
+pub fn handle_greeting_callback(
+  req : RawFetchApiRequest,
+  callback : (FetchApiResponse) -> Unit
+) -> Unit {
+  handle_fetch_api_request(FetchApiRequest(req), fn(response) {
+    callback(response)
+  })
+}
+
+///|
+fn handle_fetch_api_request(
+  req : FetchApiRequest,
+  callback : (FetchApiResponse) -> Unit
+) -> Unit {
+  handle_request(req, fn(response) { callback(response) })
+}
+
+///|
+fn handle_request[Req : Request, Res : Response](
+  req : Req,
+  callback : (Res) -> Unit
+) -> Unit {
+  req.json(fn(result) {
+    match result {
+      Ok(bytes) => {
+        println("JSON: " + bytes.stringify())
+        let response = Res::new_from_json(
+          AnyJsonData::{
+            data: "Hello, world! from Moonbit",
+            json: bytes,
+            numbers: [23, 43, 0],
+          }.to_json(),
+          status_code=201,
+          response_header=[
+              { name: "X-My-Header", value: "Hello, d!" },
+              ..req
+              .headers()
+              .entries()
+              .map(fn(h) {
+                {
+                  name: "Echo-Header-" + h.name,
+                  value: h.value + " from Moonbit",
+                }
+              }),
+            ],
+        )
+        callback(response)
+      }
+      Err(err) =>
+        callback(Res::new_from_string("Error: " + err.to_string(), 500, []))
+    }
+  })
 }
 
 ///|
 priv struct AnyJsonData {
   data : String
   numbers : Array[Int]
+  json : Json
 } derive(FromJson, ToJson, Eq, Show)
+
+///|
+extern type AnyValue
+
+///|
+pub fn result_ok(value : AnyValue) -> Result[AnyValue, AnyValue] {
+  return Ok(value)
+}
+
+///|
+pub fn result_err(value : AnyValue) -> Result[AnyValue, AnyValue] {
+  return Err(value)
+}
