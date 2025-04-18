@@ -1,5 +1,5 @@
 ///|
-pub trait Request {
+pub trait Request : Show {
   bytes(Self, callback : (Result[FixedArray[Byte], Error]) -> Unit) -> Unit
   text(Self, callback : (Result[String, Error]) -> Unit) -> Unit
   json(Self, callback : (Result[Json, Error]) -> Unit) -> Unit
@@ -45,16 +45,6 @@ impl Response with new_from_json(
 
 ///|
 pub fn handle_greeting_callback(
-  req : RawFetchApiRequest,
-  callback : (FetchApiResponse) -> Unit
-) -> Unit {
-  handle_fetch_api_request(FetchApiRequest(req), fn(response) {
-    callback(response)
-  })
-}
-
-///|
-fn handle_fetch_api_request(
   req : FetchApiRequest,
   callback : (FetchApiResponse) -> Unit
 ) -> Unit {
@@ -69,6 +59,7 @@ fn handle_request[Req : Request, Res : Response](
   req.json(fn(result) {
     match result {
       Ok(bytes) => {
+        println(req)
         println("JSON: " + bytes.stringify())
         let response = Res::new_from_json(
           AnyJsonData::{

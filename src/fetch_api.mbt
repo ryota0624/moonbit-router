@@ -1,13 +1,13 @@
 ///|
-extern type RawFetchApiRequest
+extern type FetchApiRequest
 
 ///|
-extern "js" fn headers(self : RawFetchApiRequest) -> RawFetchApiHeaders =
+extern "js" fn headers(self : FetchApiRequest) -> FetchApiHeaders =
   #| (self) => self.headers
 
 ///|
 extern "js" fn _stringPropertiy(
-  self : RawFetchApiRequest,
+  self : FetchApiRequest,
   propertiyName : String
 ) -> String =
   #| (self, propertyName) => self[propertyName]
@@ -17,77 +17,75 @@ extern "js" fn decodeText(array : FixedArray[Byte]) -> String =
   #| (array) => new TextDecoder().decode(array)
 
 ///|
-extern "js" fn keepalive(self : RawFetchApiRequest) -> Bool =
+extern "js" fn keepalive(self : FetchApiRequest) -> Bool =
   #| (self) => self.keepalive
 
 ///|
 extern "js" fn bytes(
-  self : RawFetchApiRequest,
+  self : FetchApiRequest,
   callback : (Result[FixedArray[Byte], Error]) -> Unit
 ) -> Unit =
   #| (self, callback) => self.bytes().then((b) => callback(ryota0624$hello$$result_ok(b))).catch((e) => callback(ryota0624$hello$$result_err(e)))
 
 ///|
-priv type FetchApiRequest RawFetchApiRequest
-
 ///|
 impl Request for FetchApiRequest with method_(self) -> String {
-  self._._stringPropertiy("method")
+  self._stringPropertiy("method")
 }
 
 ///|
 impl Request for FetchApiRequest with url(self) -> String {
-  self._._stringPropertiy("url")
+  self._stringPropertiy("url")
 }
 
 ///|
 impl Request for FetchApiRequest with referrer(self) -> String {
-  self._._stringPropertiy("referrer")
+  self._stringPropertiy("referrer")
 }
 
 ///|
 impl Request for FetchApiRequest with mode(self) -> String {
-  self._._stringPropertiy("mode")
+  self._stringPropertiy("mode")
 }
 
 ///|
 impl Request for FetchApiRequest with destination(self) -> String {
-  self._._stringPropertiy("destination")
+  self._stringPropertiy("destination")
 }
 
 ///|
 impl Request for FetchApiRequest with credentials(self) -> String {
-  self._._stringPropertiy("credentials")
+  self._stringPropertiy("credentials")
 }
 
 ///|
 impl Request for FetchApiRequest with integrity(self) -> String {
-  self._._stringPropertiy("integrity")
+  self._stringPropertiy("integrity")
 }
 
 ///|
 impl Request for FetchApiRequest with redirect(self) -> String {
-  self._._stringPropertiy("redirect")
+  self._stringPropertiy("redirect")
 }
 
 ///|
 impl Request for FetchApiRequest with referrerPolicy(self) -> String {
-  self._._stringPropertiy("referrerPolicy")
+  self._stringPropertiy("referrerPolicy")
 }
 
 ///|
 impl Request for FetchApiRequest with keepalive(self) -> Bool {
-  self._.keepalive()
+  self.keepalive()
 }
 
 ///|
 impl Request for FetchApiRequest with headers(self) -> Headers {
-  Headers::{ _entries: fn() { self._.headers().entries() } }
+  Headers::{ _entries: fn() { self.headers().entries() } }
 }
 
 ///|
 impl Request for FetchApiRequest with bytes(self, callback) -> Unit {
-  self._.bytes(callback)
+  self.bytes(callback)
 }
 
 ///|
@@ -95,7 +93,7 @@ impl Request for FetchApiRequest with text(
   self,
   callback : (Result[String, Error]) -> Unit
 ) -> Unit {
-  self._.bytes(fn(result) { result.map(decodeText) |> callback })
+  self.bytes(fn(result) { result.map(decodeText) |> callback })
 }
 
 ///|
@@ -119,7 +117,7 @@ impl Show for FetchApiRequest with output(self, logger) {
     .entries()
     .map(fn(h) { return h.name + ": " + h.value })
     .join(", ")
-  let msg = "Request { method: " +
+  let msg = "FetchApiRequest { method: " +
     self.method_() +
     ", url: " +
     self.url() +
@@ -146,16 +144,17 @@ impl Show for FetchApiRequest with output(self, logger) {
 }
 
 ///|
-pub extern type RawFetchApiHeaders
+priv extern type FetchApiHeaders
 
 ///|
-extern "js" fn _entries(self : RawFetchApiHeaders) -> Array[Array[String]] =
+extern "js" fn _entries(self : FetchApiHeaders) -> Array[Array[String]] =
   #| (self) => Array.from(self.entries())
 
 ///|
-fn RawFetchApiHeaders::entries(self : RawFetchApiHeaders) -> Array[Header] {
+fn FetchApiHeaders::entries(self : FetchApiHeaders) -> Array[Header] {
   return self._entries().map(fn(entry) { { name: entry[0], value: entry[1] } })
 }
+
 ///|
 extern type FetchApiResponse
 

@@ -5,8 +5,8 @@ pub struct Header {
 } derive(Eq, Show)
 
 ///|
-pub struct Headers {
-  priv _entries : () -> Array[Header]
+struct Headers {
+  _entries : () -> Array[Header]
 }
 
 ///|
