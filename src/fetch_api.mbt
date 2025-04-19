@@ -172,8 +172,9 @@ extern "js" fn FetchApiResponse::from_string(
 ///|
 impl Response for FetchApiResponse with new_from_string(
   body : String,
-  status_code : Int,
-  response_header : Array[Header]
+  status_code~ : Int,
+  response_headers~ : Array[Header]
 ) {
-  FetchApiResponse::from_string(body, status_code, response_header)
+  FetchApiResponse::from_string(body, status_code, response_headers)
 }
+  

@@ -1,5 +1,5 @@
 ///|
-pub trait Request : Show {
+pub trait Request: Show {
   bytes(Self, callback : (Result[FixedArray[Byte], Error]) -> Unit) -> Unit
   text(Self, callback : (Result[String, Error]) -> Unit) -> Unit
   json(Self, callback : (Result[Json, Error]) -> Unit) -> Unit
@@ -17,30 +17,121 @@ pub trait Request : Show {
 }
 
 ///|
+struct ResponseBuilder {
+  status_code : Int
+  response_headers : Array[Header]
+}
+
+///|
+fn status_code(self : ResponseBuilder, status_code : Int) -> ResponseBuilder {
+  ResponseBuilder::{ status_code, response_headers: self.response_headers }
+}
+
+///|
+fn response_headers(
+  self : ResponseBuilder,
+  response_headers : Array[Header]
+) -> ResponseBuilder {
+  ResponseBuilder::{ status_code: self.status_code, response_headers }
+}
+
+///|
+fn response_headers_add(
+  self : ResponseBuilder,
+  response_header : Header
+) -> ResponseBuilder {
+  ResponseBuilder::{
+    status_code: self.status_code,
+    response_headers: [response_header] + self.response_headers,
+  }
+}
+
+///|
+fn response_headers_add_all(
+  self : ResponseBuilder,
+  response_headers : Array[Header]
+) -> ResponseBuilder {
+  ResponseBuilder::{
+    status_code: self.status_code,
+    response_headers: response_headers + self.response_headers,
+  }
+}
+
+///|
+fn response_headers_add_all_from(
+  self : ResponseBuilder,
+  response_headers : Headers
+) -> ResponseBuilder {
+  ResponseBuilder::{
+    status_code: self.status_code,
+    response_headers: response_headers.entries() + self.response_headers,
+  }
+}
+
+///|
+fn raw_json[T : Response](self : ResponseBuilder, json : Json) -> T {
+  Response::new_from_json(
+    json,
+    status_code=self.status_code,
+    response_headers=self.response_headers,
+  )
+}
+
+///|
+fn json[T : Response, Payload : ToJson](
+  self : ResponseBuilder,
+  payload : Payload
+) -> T {
+  Response::new_from_json(
+    payload.to_json(),
+    status_code=self.status_code,
+    response_headers=self.response_headers,
+  )
+}
+
+///|
+fn text[T : Response](self : ResponseBuilder, text : String) -> T {
+  Response::new_from_string(
+    text,
+    status_code=self.status_code,
+    response_headers=self.response_headers,
+  )
+}
+
+///|
 pub trait Response {
   new_from_string(
     body : String,
-    status_code : Int,
-    response_header : Array[Header],
+    status_code~ : Int,
+    response_headers~ : Array[Header],
   ) -> Self
   new_from_json(
     body : Json,
     status_code~ : Int,
-    response_header~ : Array[Header],
+    response_headers~ : Array[Header],
   ) -> Self
+  builder() -> ResponseBuilder
 }
 
 ///|
 impl Response with new_from_json(
   body : Json,
   status_code~ : Int,
-  response_header~ : Array[Header]
+  response_headers~ : Array[Header]
 ) -> Self {
   Response::new_from_string(
     body.stringify(),
-    status_code,
-    [..response_header, { name: "Content-Type", value: "application/json" }],
+    status_code~,
+    response_headers=[
+        { name: "Content-Type", value: "application/json" },
+        ..response_headers,
+      ],
   )
+}
+
+///|
+impl Response with builder() -> ResponseBuilder {
+  ResponseBuilder::{ status_code: 200, response_headers: [] }
 }
 
 ///|
@@ -61,30 +152,23 @@ fn handle_request[Req : Request, Res : Response](
       Ok(bytes) => {
         println(req)
         println("JSON: " + bytes.stringify())
-        let response = Res::new_from_json(
-          AnyJsonData::{
+        let response = Res::builder()
+          .status_code(201)
+          .response_headers_add_all_from(req.headers())
+          .json(AnyJsonData::{
             data: "Hello, world! from Moonbit",
             json: bytes,
             numbers: [23, 43, 0],
-          }.to_json(),
-          status_code=201,
-          response_header=[
-              { name: "X-My-Header", value: "Hello, d!" },
-              ..req
-              .headers()
-              .entries()
-              .map(fn(h) {
-                {
-                  name: "Echo-Header-" + h.name,
-                  value: h.value + " from Moonbit",
-                }
-              }),
-            ],
-        )
+          })
         callback(response)
       }
       Err(err) =>
-        callback(Res::new_from_string("Error: " + err.to_string(), 500, []))
+        callback(
+          Res::builder()
+          .status_code(500)
+          .response_headers_add_all_from(req.headers())
+          .text("Error: " + err.to_string()),
+        )
     }
   })
 }
