@@ -5,11 +5,7 @@ pub struct Header {
 } derive(Eq, Show)
 
 ///|
-struct Headers {
-  _entries : () -> Array[Header]
-}
-
-///|
-fn entries(self : Headers) -> Array[Header] {
-  return (self._entries)()
+trait Headers {
+  entries(Self) -> Array[Header]
+  get(Self, name : String) -> String?
 }

@@ -2,7 +2,7 @@
 extern type FetchApiRequest
 
 ///|
-extern "js" fn headers(self : FetchApiRequest) -> FetchApiHeaders =
+extern "js" fn _headers(self : FetchApiRequest) -> FetchApiHeaders =
   #| (self) => self.headers
 
 ///|
@@ -79,8 +79,8 @@ impl Request for FetchApiRequest with keepalive(self) -> Bool {
 }
 
 ///|
-impl Request for FetchApiRequest with headers(self) -> Headers {
-  Headers::{ _entries: fn() { self.headers().entries() } }
+impl Request for FetchApiRequest with headers(self) -> &Headers {
+  self._headers()
 }
 
 ///|
@@ -151,8 +151,21 @@ extern "js" fn _entries(self : FetchApiHeaders) -> Array[Array[String]] =
   #| (self) => Array.from(self.entries())
 
 ///|
-fn FetchApiHeaders::entries(self : FetchApiHeaders) -> Array[Header] {
+impl Headers for FetchApiHeaders with entries(self : FetchApiHeaders) -> Array[
+  Header,
+] {
   return self._entries().map(fn(entry) { { name: entry[0], value: entry[1] } })
+}
+
+///|
+impl Headers for FetchApiHeaders with get(self : FetchApiHeaders, name : String) -> String? {
+  let entries = self.entries()
+  let entry = entries.filter(fn(e) { e.name == name })
+  if entry.length() == 0 {
+    return None
+  } else {
+    return Some(entry[0].value)
+  }
 }
 
 ///|
@@ -177,4 +190,3 @@ impl Response for FetchApiResponse with new_from_string(
 ) {
   FetchApiResponse::from_string(body, status_code, response_headers)
 }
-  
