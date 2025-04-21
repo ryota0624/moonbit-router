@@ -10,7 +10,7 @@
   "link": {
     "js": {
       "exports": [
-        "handle_greeting_callback",
+        "handle_fetch_api_request",
         "result_ok",
         "result_err"
       ]

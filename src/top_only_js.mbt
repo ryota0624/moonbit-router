@@ -1,5 +1,4 @@
-///|
-pub fn handle_greeting_callback(
+pub fn handle_fetch_api_request(
   req : FetchApiRequest,
   callback : (FetchApiResponse) -> Unit
 ) -> Unit {
