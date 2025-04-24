@@ -9,9 +9,9 @@ pub fn handle_fetch_api_request(
 fn response_any_json_data_route[Req : Request, Res : Response]() ->
      Route[Req, Res] {
   let route = Route::new(response_any_json_data)
-    .add_middleware(BasicAuthMiddleware::new("admin", "password").install())
-    .add_middleware(request_logging_middleware())
-    .add_middleware(request_url_logging_middleware())
+    .middleware(BasicAuthMiddleware::new("admin", "password").install())
+    .middleware(request_logging_middleware())
+    .middleware(request_url_logging_middleware())
   return route
 }
 

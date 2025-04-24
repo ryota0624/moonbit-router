@@ -1,5 +1,5 @@
 ///|
-struct Route[Req, Res] {
+priv struct Route[Req, Res] {
   middlewares : Array[MiddlewareFunc[Req, Res]]
   handler : (Req, (Res) -> Unit) -> Unit
 }
@@ -12,7 +12,7 @@ fn Route::new[Req, Res](
 }
 
 ///|
-fn Route::add_middleware[Req, Res](
+fn Route::middleware[Req, Res](
   self : Route[Req, Res],
   middleware : MiddlewareFunc[Req, Res]
 ) -> Route[Req, Res] {
