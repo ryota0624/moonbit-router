@@ -1,50 +1,86 @@
 ///|
-priv struct Route[Req, Res] {
-  middlewares : Array[MiddlewareFunc[Req, Res]]
-  handler : (Req, (Res) -> Unit) -> Unit
+pub struct Route[Req, Res] {
+  path : String
+  methods : Array[String]
+  handler : (Req, (Res) -> Unit) -> Unit!
 }
 
 ///|
 fn Route::new[Req, Res](
-  handler : (Req, (Res) -> Unit) -> Unit
+  path : String,
+  methods : Array[String],
+  handler : (Req, (Res) -> Unit) -> Unit!
 ) -> Route[Req, Res] {
-  return Route::{ middlewares: [], handler }
+  Route::{ path, methods, handler }
+}
+
+fn Route::newFromResult[Req, Res](
+  path : String,
+  methods : Array[String],
+  handler : (Req, (Res) -> Unit) -> Result[Unit, Error]
+) -> Route[Req, Res] {
+  Route::new(
+    path,
+    methods,
+    fn(request, callback) {
+      let result = handler(request, callback)
+      match result {
+        Ok(_) => return
+        Err(err) => fail!(err.to_string())
+      }
+    }
+  )
 }
 
 ///|
-fn Route::middleware[Req, Res](
+fn is_processable_request[Req : Request, Res](
   self : Route[Req, Res],
-  middleware : MiddlewareFunc[Req, Res]
-) -> Route[Req, Res] {
-  return Route::{
-    middlewares: self.middlewares + [middleware],
-    handler: self.handler,
-  }
+  request : Req
+) -> Bool {
+  is_method_matched(self, request) && is_path_matched(self, request)
 }
 
 ///|
-fn Route::handle[Req : Request, Res : Response](
+fn is_method_matched[Req : Request, Res](
+  self : Route[Req, Res],
+  request : Req
+) -> Bool {
+  // TODO: fix
+  if self.methods.contains("*") {
+    return true
+  }
+  self.methods.contains(request.method_())
+}
+
+///|
+fn is_path_matched[Req : Request, Res](
+  self : Route[Req, Res],
+  request : Req
+) -> Bool {
+  // TODO: fix
+  if self.path == "*" {
+    return true
+  }
+  let path = request.url()
+  if path == self.path {
+    return true
+  }
+  if path.has_prefix(self.path) {
+    return true
+  }
+  return false
+}
+
+///|
+fn Route::process[Req : Request, Res : Response](
   self : Route[Req, Res],
   request : Req,
   callback : (Res) -> Unit
-) -> Unit {
-  if self.middlewares.is_empty() {
-    handle_request(request, callback)
-  } else {
-    let middleware_chain = self.middlewares.fold(
-      init=MiddlewareChain::{
-        request,
-        next: fn(request) { (self.handler)(request, callback) },
-        do_response: callback,
-      },
-      fn(chain, middleware) {
-        MiddlewareChain::{
-          request: chain.request,
-          next: fn(_) { middleware.handle(chain) },
-          do_response: chain.do_response,
-        }
-      },
-    )
-    middleware_chain.handle(request)
-  }
+) -> Unit! {
+  (self.handler)!(request, callback)
+}
+
+///|
+test "Route::is_method_matched" {
+
 }

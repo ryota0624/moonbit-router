@@ -1,3 +1,4 @@
+///|
 pub fn handle_fetch_api_request(
   req : FetchApiRequest,
   callback : (FetchApiResponse) -> Unit
@@ -6,12 +7,16 @@ pub fn handle_fetch_api_request(
 }
 
 ///|
-fn response_any_json_data_route[Req : Request, Res : Response]() ->
-     Route[Req, Res] {
-  let route = Route::new(response_any_json_data)
-    .middleware(BasicAuthMiddleware::new("admin", "password").install())
-    .middleware(request_logging_middleware())
-    .middleware(request_url_logging_middleware())
+fn handle_js_request_router[Req : Request, Res : Response]() -> Router[Req, Res] {
+  let route = Router::new(
+    [
+      BasicAuthMiddleware::new("admin", "password").install(),
+      request_logging_middleware(),
+      request_url_logging_middleware(),
+    ],
+    [Route::newFromResult("*", ["*"], response_any_json_data)],
+    default_error_handler(),
+  )
   return route
 }
 
@@ -20,14 +25,14 @@ fn handle_request[Req : Request, Res : Response](
   req : Req,
   callback : (Res) -> Unit
 ) -> Unit {
-  response_any_json_data_route().handle(req, callback)
+  handle_js_request_router().process(req, callback)
 }
 
 ///|
 fn response_any_json_data[Req : Request, Res : Response](
   req : Req,
   callback : (Res) -> Unit
-) -> Unit {
+) -> Result[Unit, Error] {
   match req.method_() {
     "GET" => {
       let response = Res::builder()
@@ -35,6 +40,7 @@ fn response_any_json_data[Req : Request, Res : Response](
         .response_headers_add_all_from(req.headers())
         .text("Hello, world! from Moonbit")
       callback(response)
+      return Ok(())
     }
     "POST" =>
       req.json(fn(result) {
@@ -69,6 +75,7 @@ fn response_any_json_data[Req : Request, Res : Response](
         .text("Method not allowed"),
       )
   }
+  return Ok(())
 }
 
 ///|

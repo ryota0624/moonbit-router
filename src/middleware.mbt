@@ -1,28 +1,28 @@
 ///|
-priv type MiddlewareFunc[Req, Res] (MiddlewareChain[Req, Res]) -> Unit
+pub type MiddlewareFunc[Req, Res] (MiddlewareChain[Req, Res]) -> Unit!
 
 ///|
 fn MiddlewareFunc::handle[Req, Res](
   self : MiddlewareFunc[Req, Res],
   input : MiddlewareChain[Req, Res]
-) -> Unit {
-  (self._)(input)
+) -> Unit! {
+  (self._)!(input)
 }
 
 ///|
 fn MiddlewareFunc::new[Req, Res](
-  func : (Req, (Req) -> Unit, (Res) -> Unit) -> Unit
+  func : (Req, (Req) -> Unit!, (Res) -> Unit) -> Unit!
 ) -> MiddlewareFunc[Req, Res] {
-  fn middleware(input : MiddlewareChain[Req, Res]) -> Unit {
-    func(input.request, input.next, input.do_response)
+  fn middleware(input : MiddlewareChain[Req, Res]) -> Unit! {
+    func!(input.request, input.next, input.do_response)
   }
 
   return middleware
 }
 
 ///|
-priv struct MiddlewareChain[Req, Res] {
-  next : (Req) -> Unit
+pub struct MiddlewareChain[Req, Res] {
+  next : (Req) -> Unit!
   do_response : (Res) -> Unit
   request : Req
 }
@@ -31,8 +31,8 @@ priv struct MiddlewareChain[Req, Res] {
 fn MiddlewareChain::handle[Req, Res](
   self : MiddlewareChain[Req, Res],
   request : Req
-) -> Unit {
-  (self.next)(request)
+) -> Unit! {
+  (self.next)!(request)
 }
 
 ///|
@@ -60,22 +60,23 @@ fn BasicAuthMiddleware::new(
 fn BasicAuthMiddleware::install[Req : Request, Res : Response](
   self : BasicAuthMiddleware
 ) -> MiddlewareFunc[Req, Res] {
-  MiddlewareFunc::new(fn(
+  fn handle!(
     request : Req,
-    next : (Req) -> Unit,
+    next : (Req) -> Unit!,
     do_response : (Res) -> Unit
-  ) {
-    self.handle(request, next, do_response)
-  })
+  )  {
+    self.handle!(request, next, do_response)
+  }
+  return MiddlewareFunc::new(handle)
 }
 
 ///|
 fn BasicAuthMiddleware::handle[Req : Request, Res : Response](
   self : BasicAuthMiddleware,
   request : Req,
-  next : (Req) -> Unit,
+  next : (Req) -> Unit!,
   do_response : (Res) -> Unit
-) -> Unit {
+) -> Unit! {
   let auth_user = request
     .headers()
     .get("authorization")
@@ -83,7 +84,7 @@ fn BasicAuthMiddleware::handle[Req : Request, Res : Response](
     .bind(BasicAuthUser::fromAuthorizationHeader)
   let registered = auth_user.filter(fn(user) { self.is_registered(user) })
   match registered {
-    Some(_) => next(request)
+    Some(_) => next!(request)
     None =>
       do_response(
         Res::builder()
@@ -126,9 +127,9 @@ fn BasicAuthUser::fromAuthorizationHeader(header : String) -> BasicAuthUser? {
 ///|
 fn request_logging_middleware[Req : Request, Res : Response]() ->
      MiddlewareFunc[Req, Res] {
-  let fns = fn(request : Req, next : (Req) -> Unit, _) {
+  let fns = fn(request : Req, next : (Req) -> Unit!, _) -> Unit! {
     println("Request: " + request.to_string())
-    next(request)
+    next!(request)
   }
   return MiddlewareFunc::new(fns)
 }
@@ -136,9 +137,9 @@ fn request_logging_middleware[Req : Request, Res : Response]() ->
 ///|
 fn request_url_logging_middleware[Req : Request, Res : Response]() ->
      MiddlewareFunc[Req, Res] {
-  let fns = fn(request : Req, next : (Req) -> Unit, _) {
+  let fns = fn!(request : Req, next : (Req) -> Unit!, _) {
     println("URL Logging: " + request.url())
-    next(request)
+    next!(request)
   }
   return MiddlewareFunc::new(fns)
 }
