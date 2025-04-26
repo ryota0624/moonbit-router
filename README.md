@@ -1,3 +1,4 @@
-# ryota0624/hello
+# ryota0624/router
 
+参考にして作ってみる
 https://github.com/routerify/routerify
