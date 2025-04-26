@@ -1,0 +1,10 @@
+{
+    "import": [
+        "ryota0624/router/lib"
+    ],
+    "targets": {
+        "fetch_api.mbt": [
+            "js"
+        ]
+    }
+}

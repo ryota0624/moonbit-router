@@ -1,9 +1,2 @@
 {
-    "link": {
-        "js": {
-            "exports": [
-                "hello"
-            ]
-        }
-    }
 }
