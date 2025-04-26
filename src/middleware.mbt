@@ -64,9 +64,10 @@ fn BasicAuthMiddleware::install[Req : Request, Res : Response](
     request : Req,
     next : (Req) -> Unit!,
     do_response : (Res) -> Unit
-  )  {
+  ) {
     self.handle!(request, next, do_response)
   }
+
   return MiddlewareFunc::new(handle)
 }
 
@@ -80,7 +81,9 @@ fn BasicAuthMiddleware::handle[Req : Request, Res : Response](
   let auth_user = request
     .headers()
     .get("authorization")
-    .bind(fn(header) { header.split(" ").to_array().get(1) })
+    .bind(fn(header) {
+      header.split(" ").to_array().get(1).map(fn { value => value.to_string() })
+    })
     .bind(BasicAuthUser::fromAuthorizationHeader)
   let registered = auth_user.filter(fn(user) { self.is_registered(user) })
   match registered {
@@ -121,7 +124,10 @@ fn BasicAuthUser::fromAuthorizationHeader(header : String) -> BasicAuthUser? {
   let authorization = base64_decode(header)
   let credentials = authorization.split(":").to_array()
   guard credentials is [username, password] else { return None }
-  return Some(BasicAuthUser::{ username, password })
+  return Some(BasicAuthUser::{
+    username: username.to_string(),
+    password: password.to_string(),
+  })
 }
 
 ///|

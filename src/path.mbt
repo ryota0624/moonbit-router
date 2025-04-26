@@ -8,7 +8,12 @@ fn Path::new(path : String) -> Path {
 
 ///|
 fn Path::from_url(url : String) -> Path? {
-  url.split("://").to_array().get(1).map(Path::new)
+  url
+  .split("://")
+  .to_array()
+  .get(1)
+  .map(fn { value => value.to_string() })
+  .map(Path::new)
 }
 
 ///|
