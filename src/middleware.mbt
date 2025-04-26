@@ -1,29 +1,66 @@
 ///|
-pub type MiddlewareFunc[Req, Res] (MiddlewareChain[Req, Res]) -> Res!Error +
+pub type PreMiddlewareFunc[Req, Res] (Req, (Req) -> Res!Error + Async) -> Res!Error +
 Async
 
 ///|
-fn MiddlewareFunc::handle[Req, Res](
-  self : MiddlewareFunc[Req, Res],
-  input : MiddlewareChain[Req, Res]
-) -> Res!Error + Async {
-  (self._)!(input)
-}
-///|
-fn MiddlewareFunc::new[Req, Res](
-  func : (Req, (Req) -> Res!Error + Async) -> Res!Error + Async
-) -> MiddlewareFunc[Req, Res] {
-  fn middleware(input : MiddlewareChain[Req, Res]) -> Res!Error + Async {
-    func!(input.request, input.next)
-  }
+pub type PostMiddlewareFunc[Req, Res] (Req, Res) -> Res!Error + Async
 
-  return middleware
+///|
+enum Middleware[Req, Res] {
+  PreMiddleware(PreMiddlewareFunc[Req, Res])
+  PostMiddleware(PostMiddlewareFunc[Req, Res])
+}
+
+///|
+fn PreMiddlewareFunc::handle[Req, Res](
+  self : PreMiddlewareFunc[Req, Res],
+  input : Req,
+  next : (Req) -> Res!Error + Async
+) -> Res!Error + Async {
+  (self._)!(input, next)
+}
+
+///|
+fn PostMiddlewareFunc::handle[Req, Res](
+  self : PostMiddlewareFunc[Req, Res],
+  input : Req,
+  output : Res
+) -> Res!Error + Async {
+  (self._)!(input, output)
+}
+
+///|
+fn PreMiddlewareFunc::new[Req, Res](
+  func : (Req, (Req) -> Res!Error + Async) -> Res!Error + Async
+) -> PreMiddlewareFunc[Req, Res] {
+  return func
+}
+
+///|
+fn PostMiddlewareFunc::new[Req, Res](
+  func : (Req, Res) -> Res!Async
+) -> PostMiddlewareFunc[Req, Res] {
+  return async fn { req, res => func!(req, res) }
 }
 
 ///|
 pub struct MiddlewareChain[Req, Res] {
   next : (Req) -> Res!Error + Async
-  request : Req
+}
+
+///|
+fn MiddlewareChain::add[Req, Res](
+  self : MiddlewareChain[Req, Res],
+  middleware : Middleware[Req, Res]
+) -> MiddlewareChain[Req, Res] {
+  match middleware {
+    PreMiddleware(middleware) =>
+      MiddlewareChain::{ next: fn(req) { middleware.handle!(req, self.next) } }
+    PostMiddleware(middleware) =>
+      MiddlewareChain::{
+        next: fn(req) { middleware.handle!(req, self.handle!(req)) },
+      }
+  }
 }
 
 ///|
@@ -58,7 +95,7 @@ fn BasicAuthMiddleware::new(
 ///|
 fn BasicAuthMiddleware::install[Req : Request, Res : Response](
   self : BasicAuthMiddleware
-) -> MiddlewareFunc[Req, Res] {
+) -> PreMiddlewareFunc[Req, Res] {
   async fn handle!(
     request : Req,
     next : (Req) -> Res!Error + Async
@@ -66,7 +103,7 @@ fn BasicAuthMiddleware::install[Req : Request, Res : Response](
     self.handle!(request, next)
   }
 
-  return MiddlewareFunc::new(handle)
+  return PreMiddlewareFunc::new(handle)
 }
 
 ///|
@@ -124,8 +161,8 @@ fn BasicAuthUser::fromAuthorizationHeader(header : String) -> BasicAuthUser? {
 
 ///|
 fn request_logging_middleware[Req : Request, Res : Response]() ->
-     MiddlewareFunc[Req, Res] {
-  return MiddlewareFunc::new(fn(
+     PreMiddlewareFunc[Req, Res] {
+  return PreMiddlewareFunc::new(fn(
     request : Req,
     next : (Req) -> Res!Error + Async
   ) -> Res!Error + Async {
@@ -135,9 +172,18 @@ fn request_logging_middleware[Req : Request, Res : Response]() ->
 }
 
 ///|
+fn response_logging_middleware[Req : Request, Res : Response]() ->
+     PostMiddlewareFunc[Req, Res] {
+  return PostMiddlewareFunc::new(fn(_ : Req, response : Res) -> Res!Async {
+    println("Response")
+    response
+  })
+}
+
+///|
 fn request_url_logging_middleware[Req : Request, Res : Response]() ->
-     MiddlewareFunc[Req, Res] {
-  return MiddlewareFunc::new(fn(req : Req, next) {
+     PreMiddlewareFunc[Req, Res] {
+  return PreMiddlewareFunc::new(fn(req : Req, next) {
     println("URL Logging: " + req.url())
     next!(req)
   })

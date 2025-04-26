@@ -13,6 +13,7 @@ fn handle_js_request_router[Req : Request, Res : Response]() -> Router[Req, Res]
       request_logging_middleware(),
       request_url_logging_middleware(),
     ],
+    [response_logging_middleware()],
     [Route::fromSafeHandler("*", ["*"], response_any_json_data_async)],
     default_error_handler(),
   )
