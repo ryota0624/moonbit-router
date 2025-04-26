@@ -14,22 +14,19 @@ fn Route::new[Req, Res](
   Route::{ path, methods, handler }
 }
 
+///|
 fn Route::newFromResult[Req, Res](
   path : String,
   methods : Array[String],
   handler : (Req, (Res) -> Unit) -> Result[Unit, Error]
 ) -> Route[Req, Res] {
-  Route::new(
-    path,
-    methods,
-    fn(request, callback) {
-      let result = handler(request, callback)
-      match result {
-        Ok(_) => return
-        Err(err) => fail!(err.to_string())
-      }
+  Route::new(path, methods, fn(request, callback) {
+    let result = handler(request, callback)
+    match result {
+      Ok(_) => return
+      Err(err) => fail!(err.to_string())
     }
-  )
+  })
 }
 
 ///|
@@ -82,5 +79,8 @@ fn Route::process[Req : Request, Res : Response](
 
 ///|
 test "Route::is_method_matched" {
-
+  let request = FakeRequest::new(method_="GET", url="/test")
+  let route = Route::newFromResult("/test", ["GET"], fn(_, _) { Ok(()) })
+  assert_eq!(is_method_matched(route, request), true)
+  assert_eq!(is_path_matched(route, request), true)
 }

@@ -4,6 +4,11 @@ struct ResponseBuilder {
   response_headers : Array[Header]
 }
 
+fn ResponseBuilder::new(
+
+) -> ResponseBuilder {
+  ResponseBuilder::{ status_code: 200, response_headers: [] }
+}
 ///|
 fn status_code(self : ResponseBuilder, status_code : Int) -> ResponseBuilder {
   ResponseBuilder::{ status_code, response_headers: self.response_headers }

@@ -22,6 +22,12 @@ struct FakeRequest {
   method_ : String
 }
 
+fn FakeRequest::new(
+  url~ : String,
+  method_~ : String
+) -> FakeRequest {
+  FakeRequest::{ url, method_ }
+}
 ///|
 impl Request for FakeRequest with bytes(
   self : FakeRequest,

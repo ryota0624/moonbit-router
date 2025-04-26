@@ -9,3 +9,4 @@ trait Headers {
   entries(Self) -> Array[Header]
   get(Self, name : String) -> String?
 }
+
