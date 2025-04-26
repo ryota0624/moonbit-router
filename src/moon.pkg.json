@@ -1,6 +1,6 @@
 {
   "import": [
-    "ryota0624/hello/lib"
+    "ryota0624/router/lib"
   ],
   "targets": {
     "top_only_js.mbt": [
