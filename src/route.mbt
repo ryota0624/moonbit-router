@@ -2,31 +2,25 @@
 pub struct Route[Req, Res] {
   path : String
   methods : Array[String]
-  handler : (Req, (Res) -> Unit) -> Unit!
+  handler : (Req) -> Res!Error + Async
 }
 
 ///|
 fn Route::new[Req, Res](
   path : String,
   methods : Array[String],
-  handler : (Req, (Res) -> Unit) -> Unit!
+  handler : (Req) -> Res!Error + Async
 ) -> Route[Req, Res] {
   Route::{ path, methods, handler }
 }
 
 ///|
-fn Route::newFromResult[Req, Res](
+fn Route::fromSafeHandler[Req, Res](
   path : String,
   methods : Array[String],
-  handler : (Req, (Res) -> Unit) -> Result[Unit, Error]
+  handler : (Req) -> Res!Async
 ) -> Route[Req, Res] {
-  Route::new(path, methods, fn(request, callback) {
-    let result = handler(request, callback)
-    match result {
-      Ok(_) => return
-      Err(err) => fail!(err.to_string())
-    }
-  })
+  Route::new(path, methods, async fn { req => handler!(req) })
 }
 
 ///|
@@ -71,16 +65,15 @@ fn is_path_matched[Req : Request, Res](
 ///|
 fn Route::process[Req : Request, Res : Response](
   self : Route[Req, Res],
-  request : Req,
-  callback : (Res) -> Unit
-) -> Unit! {
-  (self.handler)!(request, callback)
+  request : Req
+) -> Res!Error + Async {
+  (self.handler)!(request)
 }
 
 ///|
 test "Route::is_method_matched" {
-  let request = FakeRequest::new(method_="GET", url="/test")
-  let route = Route::newFromResult("/test", ["GET"], fn(_, _) { Ok(()) })
+  let request = DummyRequest::new(method_="GET", url="/test")
+  let route = Route::new("/test", ["GET"], async fn(_) { return Ok(()) })
   assert_eq!(is_method_matched(route, request), true)
   assert_eq!(is_path_matched(route, request), true)
 }

@@ -10,9 +10,7 @@
   "link": {
     "js": {
       "exports": [
-        "handle_fetch_api_request",
-        "result_ok",
-        "result_err"
+        "handle_fetch_api_request"
       ]
     }
   }

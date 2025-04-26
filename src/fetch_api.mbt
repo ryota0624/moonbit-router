@@ -13,19 +13,24 @@ extern "js" fn _stringPropertiy(
   #| (self, propertyName) => self[propertyName]
 
 ///|
-extern "js" fn decodeText(array : FixedArray[Byte]) -> String =
-  #| (array) => new TextDecoder().decode(array)
-
-///|
 extern "js" fn keepalive(self : FetchApiRequest) -> Bool =
   #| (self) => self.keepalive
 
 ///|
-extern "js" fn bytes(
+extern "js" fn js_response_bytes(
   self : FetchApiRequest,
-  callback : (Result[FixedArray[Byte], Error]) -> Unit
+  resolve : (FixedArray[Byte]) -> Unit,
+  reject : (Error) -> Unit
 ) -> Unit =
-  #| (self, callback) => self.bytes().then((b) => callback(ryota0624$hello$$result_ok(b))).catch((e) => callback(ryota0624$hello$$result_err(e)))
+  #| (self, resolve, reject) => self.bytes().then(resolve).catch(reject)
+
+///|
+extern "js" fn js_response_text(
+  self : FetchApiRequest,
+  resolve : (String) -> Unit,
+  reject : (Error) -> Unit
+) -> Unit =
+  #| (self, resolve, reject) => self.text().then(resolve).catch(reject)
 
 ///|
 ///|
@@ -84,29 +89,24 @@ impl Request for FetchApiRequest with headers(self) -> &Headers {
 }
 
 ///|
-impl Request for FetchApiRequest with bytes(self, callback) -> Unit {
-  self.bytes(callback)
-}
-
-///|
-impl Request for FetchApiRequest with text(
-  self,
-  callback : (Result[String, Error]) -> Unit
-) -> Unit {
-  self.bytes(fn(result) { result.map(decodeText) |> callback })
-}
-
-///|
-impl Request for FetchApiRequest with json(
-  self : FetchApiRequest,
-  callback : (Result[Json, Error]) -> Unit
-) -> Unit {
-  self.text(fn(result) {
-    let jsonValue = result.bind(fn(text) {
-      @json.parse?(text).map_err(fn(err) { err })
-    })
-    callback(jsonValue)
+impl Request for FetchApiRequest with bytes(self) -> FixedArray[Byte]!Error +
+Async {
+  suspend!(fn(resolve, reject) { 
+    self.js_response_bytes(resolve, reject)
   })
+}
+
+///|
+impl Request for FetchApiRequest with text(self) -> String!Error + Async {
+    suspend!(fn(resolve, reject) { 
+    self.js_response_text(resolve, reject)
+  })
+}
+
+///|
+impl Request for FetchApiRequest with json(self : FetchApiRequest) -> Json!Error +
+Async {
+  @json.parse?(self.text!()).unwrap_or_error!()
 }
 
 ///|

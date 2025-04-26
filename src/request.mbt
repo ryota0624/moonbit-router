@@ -1,8 +1,8 @@
 ///|
 pub trait Request: Show {
-  bytes(Self, callback : (Result[FixedArray[Byte], Error]) -> Unit) -> Unit
-  text(Self, callback : (Result[String, Error]) -> Unit) -> Unit
-  json(Self, callback : (Result[Json, Error]) -> Unit) -> Unit
+  bytes(Self) -> FixedArray[Byte]!Error + Async
+  text(Self) -> String!Error + Async
+  json(Self) -> Json!Error + Async
   headers(Self) -> &Headers
   method_(Self) -> String
   url(Self) -> String
@@ -17,98 +17,90 @@ pub trait Request: Show {
 }
 
 ///|
-struct FakeRequest {
+pub struct DummyRequest {
   url : String
   method_ : String
 }
 
-fn FakeRequest::new(
-  url~ : String,
-  method_~ : String
-) -> FakeRequest {
-  FakeRequest::{ url, method_ }
-}
 ///|
-impl Request for FakeRequest with bytes(
-  self : FakeRequest,
-  callback : (Result[FixedArray[Byte], Error]) -> Unit
-) -> Unit {
+fn DummyRequest::new(url~ : String, method_~ : String) -> DummyRequest {
+  DummyRequest::{ url, method_ }
+}
+
+///|
+impl Request for DummyRequest with bytes(_ : DummyRequest) -> FixedArray[Byte]!Error +
+Async {
   ...
 }
 
 ///|
-impl Request for FakeRequest with text(
-  self : FakeRequest,
-  callback : (Result[String, Error]) -> Unit
-) -> Unit {
+impl Request for DummyRequest with text(_ : DummyRequest) -> String!Error +
+Async {
   ...
 }
 
 ///|
-impl Request for FakeRequest with json(
-  self : FakeRequest,
-  callback : (Result[Json, Error]) -> Unit
-) -> Unit {
+impl Request for DummyRequest with json(_ : DummyRequest) -> Json!Error + Async {
   ...
 }
 
 ///|
-impl Request for FakeRequest with headers(self : FakeRequest) -> &Headers {
+impl Request for DummyRequest with headers(_ : DummyRequest) -> &Headers {
   ...
 }
 
 ///|
-impl Request for FakeRequest with method_(self : FakeRequest) -> String {
+impl Request for DummyRequest with method_(self : DummyRequest) -> String {
   self.method_
 }
 
 ///|
-impl Request for FakeRequest with url(self : FakeRequest) -> String {
+impl Request for DummyRequest with url(self : DummyRequest) -> String {
   self.url
 }
 
 ///|
-impl Request for FakeRequest with referrer(self : FakeRequest) -> String {
+impl Request for DummyRequest with referrer(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with mode(self : FakeRequest) -> String {
+impl Request for DummyRequest with mode(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with destination(self : FakeRequest) -> String {
+impl Request for DummyRequest with destination(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with credentials(self : FakeRequest) -> String {
+impl Request for DummyRequest with credentials(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with integrity(self : FakeRequest) -> String {
+impl Request for DummyRequest with integrity(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with redirect(self : FakeRequest) -> String {
+impl Request for DummyRequest with redirect(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with referrerPolicy(self : FakeRequest) -> String {
+impl Request for DummyRequest with referrerPolicy(_ : DummyRequest) -> String {
   ...
 }
 
 ///|
-impl Request for FakeRequest with keepalive(self : FakeRequest) -> Bool {
+impl Request for DummyRequest with keepalive(_ : DummyRequest) -> Bool {
   ...
 }
 
 ///|
-impl Show for FakeRequest with output(self : FakeRequest, logger : &Logger) -> Unit {
+impl Show for DummyRequest with output(self : DummyRequest, logger : &Logger) -> Unit {
   logger.write_string("FakeRequest")
   logger.write_string("url: " + self.url())
   logger.write_string("method: " + self.method_())
