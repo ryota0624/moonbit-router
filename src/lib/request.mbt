@@ -1,6 +1,6 @@
 ///|
 pub struct Request {
-  headers : @immut/list.T[Header]
+  headers : Headers
   url : String
   method_ : String
   referrer : String
@@ -28,7 +28,7 @@ pub fn Request::new(
   keepalive~ : Bool
 ) -> Request {
   Request::{
-    headers,
+    headers: Headers::new(headers),
     url,
     method_,
     referrer,

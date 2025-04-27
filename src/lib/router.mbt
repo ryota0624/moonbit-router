@@ -1,7 +1,7 @@
 ///| TODO: impl builder
 pub struct Router[BodyReader] {
-  preMiddleware : Array[PreMiddlewareFunc]
-  postMiddleware : Array[PostMiddlewareFunc]
+  pre_middleware : Array[PreMiddlewareFunc]
+  post_middleware : Array[PostMiddlewareFunc]
   routes : Array[Route[BodyReader]]
   error_handler : ErrorHandler
 }
@@ -24,20 +24,19 @@ pub fn default_error_handler() -> ErrorHandler {
 
 ///|
 pub fn Router::new[Reader : BodyReader](
-  preMiddleware : Array[PreMiddlewareFunc],
-  postMiddleware : Array[PostMiddlewareFunc],
+  pre_middleware~ : Array[PreMiddlewareFunc],
+  post_middleware~ : Array[PostMiddlewareFunc],
   routes : Array[Route[Reader]],
   error_handler : ErrorHandler
 ) -> Router[Reader] {
-  Router::{ preMiddleware, postMiddleware, routes, error_handler }
+  Router::{ pre_middleware, post_middleware, routes, error_handler }
 }
-
 
 ///|
 pub fn Router::process[Reader : BodyReader](
   self : Router[Reader],
   request : Request,
-  bodyReader : Reader,
+  bodyReader : Reader
 ) -> Response!Error + Async {
   let run = fn!() -> Response!Error + Async {
     let route = self.select_route(request)
@@ -45,19 +44,15 @@ pub fn Router::process[Reader : BodyReader](
       fail!("Route not found")
     }
     guard route is Some(route) else { fail!("Route not found") }
-    if self.preMiddleware.is_empty() {
-      (route.handler)!(request, bodyReader)
-    } else {
-      let pre_middleware_chain = self.preMiddleware.fold(
-        init=MiddlewareChain::{ next: route.handler },
-        fn(chain, middleware) { chain.add(PreMiddleware(middleware)) },
-      )
-      let postMiddleware_chain = self.postMiddleware.fold(
-        init=pre_middleware_chain,
-        fn(chain, middleware) { chain.add(PostMiddleware(middleware)) },
-      )
-      postMiddleware_chain.handle!(request, bodyReader)
-    }
+    let pre_middleware_chain = self.pre_middleware.rev().fold(
+      init=MiddlewareChain::{ next: route.handler },
+      fn(chain, middleware) { chain.add(PreMiddleware(middleware)) },
+    )
+    let post_middleware_chain = self.post_middleware.fold(
+      init=pre_middleware_chain,
+      fn(chain, middleware) { chain.add(PostMiddleware(middleware)) },
+    )
+    post_middleware_chain.handle!(request, bodyReader)
   }
   try {
     run!()

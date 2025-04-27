@@ -15,8 +15,14 @@ pub fn handle_request_[R : @lib.BodyReader](
 ///|
 pub fn router[R : @lib.BodyReader]() -> @lib.Router[R] {
   @lib.Router::new(
-    [@lib.request_logging_middleware()],
-    [@lib.response_logging_middleware()],
+    pre_middleware=[
+      @lib.request_logging_middleware(),
+      @lib.BasicAuthMiddleware::new("admin", "admin").install(),
+    ],
+    post_middleware=[
+      @lib.response_logging_middleware(),
+      @lib.response_logging_middleware2(),
+    ],
     [@lib.Route::new("*", @immut/list.from_array(["*"]), handle_request_)],
     @lib.default_error_handler(),
   )
