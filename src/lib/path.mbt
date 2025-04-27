@@ -17,7 +17,7 @@ fn Path::from_url(url : String) -> Path? {
 }
 
 ///|
-fn &Request::path(self : &Request) -> Path! {
-  guard Path::from_url(self.url()) is Some(path) else { fail!("Invalid URL") }
+fn path(request : Request) -> Path! {
+  guard Path::from_url(request.url) is Some(path) else { fail!("Invalid URL") }
   path
 }

@@ -1,6 +1,7 @@
 {
   "import": [
-    "ryota0624/router/lib"
+    "ryota0624/router/lib",
+    "ryota0624/router/adaptor"
   ],
   "targets": {
     "top_only_js.mbt": [
@@ -10,9 +11,8 @@
   "link": {
     "js": {
       "exports": [
-        "handle_fetch_api_request",
-        "result_ok",
-        "result_err"
+        "handle_fetch_router",
+        "handle_request_by_router"
       ]
     }
   }
