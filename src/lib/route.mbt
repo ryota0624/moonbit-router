@@ -8,16 +8,16 @@ pub struct Route[BodyReader] {
 ///|
 pub fn Route::new[BodyReader](
   path : String,
-  methods : @immut/list.T[String],
+  methods : Array[String],
   handler : (Request, BodyReader) -> Response!Error + Async
 ) -> Route[BodyReader] {
-  Route::{ path, methods, handler }
+  Route::{ path, methods: @immut/list.from_array(methods), handler }
 }
 
 ///|
 pub fn Route::from_safe_handler[BodyReader](
   path : String,
-  methods : @immut/list.T[String],
+  methods : Array[String],
   handler : (Request, BodyReader) -> Response!Async
 ) -> Route[BodyReader] {
   Route::new(path, methods, async fn(req, reader) { handler!(req, reader) })

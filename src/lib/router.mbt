@@ -75,18 +75,26 @@ test "Router::process内ではpre_middleware -> handler -> post_middlewareの順
     let router : Router[FakeBodyReader] = Router::new(
       pre_middleware=[
         fn(request, next) {
-          called.push("pre_middleware")
+          called.push("pre_middleware1")
+          next!(request)
+        },
+        fn(request, next) {
+          called.push("pre_middleware2")
           next!(request)
         },
       ],
       post_middleware=[
         fn(_, response) {
-          called.push("post_middleware")
+          called.push("post_middleware1")
+          response
+        },
+        fn(_, response) {
+          called.push("post_middleware2")
           response
         },
       ],
       [
-        Route::new("*", @immut/list.from_array(["*"]), fn(_, _) {
+        Route::new("*", ["*"], fn(_, _) {
           called.push("handler")
           Response::from_string(
             "Hello, world!",
@@ -105,7 +113,7 @@ test "Router::process内ではpre_middleware -> handler -> post_middlewareの順
         ),
         FakeBodyReader::default(),
       )
-      assert_eq!(called, ["pre_middleware", "handler", "post_middleware"])
+      assert_eq!(called, ["pre_middleware1", "pre_middleware2" , "handler", "post_middleware1", "post_middleware2"])
     } catch {
       err => println("Error: " + err.to_string())
     }

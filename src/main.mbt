@@ -23,7 +23,7 @@ pub fn router[R : @lib.BodyReader]() -> @lib.Router[R] {
       @lib.response_logging_middleware(),
       @lib.response_logging_middleware2(),
     ],
-    [@lib.Route::new("*", @immut/list.from_array(["*"]), handle_request_)],
+    [@lib.Route::new("*", ["*"], handle_request_)],
     @lib.default_error_handler(),
   )
 }
