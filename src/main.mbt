@@ -41,3 +41,8 @@ pub fn handle_request_by_router(
   let response = router.process!(req.request(), req)
   @adaptor.FetchApiResponse::from(response)
 }
+
+///|
+pub async fn init_database() -> @database.SqliteDatabase!Error + Async {
+  @database.SqliteDatabase::new!("test.db", with_create=true)
+}

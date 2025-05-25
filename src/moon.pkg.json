@@ -1,7 +1,8 @@
 {
   "import": [
     "ryota0624/router/lib",
-    "ryota0624/router/adaptor"
+    "ryota0624/router/adaptor",
+    "ryota0624/router/database"
   ],
   "targets": {
     "top_only_js.mbt": [
@@ -12,7 +13,8 @@
     "js": {
       "exports": [
         "handle_fetch_router",
-        "handle_request_by_router"
+        "handle_request_by_router",
+        "init_database"
       ]
     }
   }
