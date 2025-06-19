@@ -12,7 +12,7 @@ fn Path::from_url(url : String) -> Path? {
   .split("://")
   .to_array()
   .get(1)
-  .map(fn { value => value.to_string() })
+  .map(value => value.to_string())
   .map(Path::new)
 }
 

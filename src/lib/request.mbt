@@ -61,9 +61,9 @@ fn Request::from(url~ : String, method_~ : String) -> Request {
 
 ///|
 pub(open) trait BodyReader {
-  bytes(Self) -> FixedArray[Byte] raise
-  text(Self) -> String raise
-  json(Self) -> Json raise
+  async bytes(Self) -> FixedArray[Byte] raise
+  async text(Self) -> String raise
+  async json(Self) -> Json raise
 }
 
 ///|

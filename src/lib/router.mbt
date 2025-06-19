@@ -67,7 +67,7 @@ async fn[Reader : BodyReader] Router::_process(
   post_middleware_chain.handle(request, bodyReader)
 }
 
-///|
+// ///|
 test "Router::process内ではpre_middleware -> handler -> post_middlewareの順で実行される" {
   run_async(async fn() {
     let called : Array[String] = []
