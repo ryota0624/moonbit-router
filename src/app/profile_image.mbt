@@ -2,6 +2,7 @@
 type ProfileImageUrl String
 
 //
+
 ///|
 struct ProfileImageUploader[ExecutionContext] {
   upload : (ExecutionContext, UserId, ProfileImageUrl) -> Unit!Async + Error
@@ -29,7 +30,7 @@ pub fn profileImageUploaderOnGcs(
 ) -> ProfileImageUploader[GcsExecutionContext] {
   ProfileImageUploader::{
     upload: fn(_, userId, url) {
-      println(url._)
+      println(url.inner())
       // Implementation for uploading profile image to GCS
     },
   }
@@ -41,13 +42,13 @@ trait UsesGcsClient {
 }
 
 ///|
-fn profileImageUploaderOnGcs2[Env : UsesGcsClient](
+fn[Env : UsesGcsClient] profileImageUploaderOnGcs2(
   env : Env
 ) -> ProfileImageUploader[GcsExecutionContext] {
   let _ = env.gcs()
   ProfileImageUploader::{
     upload: fn(_, userId, url) {
-      println(url._)
+      println(url.inner())
       // Implementation for uploading profile image to GCS
     },
   }

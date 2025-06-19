@@ -13,7 +13,7 @@ pub fn handle_request_[R : @lib.BodyReader](
 }
 
 ///|
-pub fn router[R : @lib.BodyReader]() -> @lib.Router[R] {
+pub fn[R : @lib.BodyReader] router() -> @lib.Router[R] {
   @lib.Router::new(
     pre_middleware=[
       @lib.request_logging_middleware(),

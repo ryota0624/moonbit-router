@@ -82,7 +82,6 @@ pub fn response_logging_middleware2() -> PostMiddlewareFunc {
   }
 }
 
-
 ///|
 struct BasicAuthMiddleware {
   users : Array[BasicAuthUser]

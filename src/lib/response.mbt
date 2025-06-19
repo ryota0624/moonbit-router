@@ -5,16 +5,13 @@ pub struct Response {
   body : ResponseBody
 } derive(Show)
 
+///|
 pub fn Response::from_string(
-  body: String,
+  body : String,
   status_code~ : Int,
   response_headers~ : @immut/list.T[Header]
 ) -> Response {
-  Response::{
-    status_code,
-    response_headers,
-    body: ResponseBody::String(body),
-  }
+  Response::{ status_code, response_headers, body: ResponseBody::String(body) }
 }
 
 ///|
@@ -31,6 +28,4 @@ pub(open) trait ResponseWriter {
 }
 
 ///|
-pub(open) trait RawResponse: Show {
-
-}
+pub(open) trait RawResponse: Show {}

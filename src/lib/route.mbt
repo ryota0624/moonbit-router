@@ -15,16 +15,16 @@ pub fn Route::new[BodyReader](
 }
 
 ///|
-pub fn Route::from_safe_handler[BodyReader](
+pub fn[BodyReader] Route::from_safe_handler(
   path : String,
   methods : Array[String],
-  handler : (Request, BodyReader) -> Response!Async
+  handler : (Request, BodyReader) -> Response raise Async
 ) -> Route[BodyReader] {
-  Route::new(path, methods, async fn(req, reader) { handler!(req, reader) })
+  Route::new(path, methods, async fn(req, reader) { handler(req, reader) })
 }
 
 ///|
-fn is_processable_request[BodyReader](
+fn[BodyReader] is_processable_request(
   self : Route[BodyReader],
   request : Request
 ) -> Bool {
@@ -32,7 +32,7 @@ fn is_processable_request[BodyReader](
 }
 
 ///|
-fn is_method_matched[BodyReader](
+fn[BodyReader] is_method_matched(
   self : Route[BodyReader],
   request : Request
 ) -> Bool {
@@ -44,7 +44,7 @@ fn is_method_matched[BodyReader](
 }
 
 ///|
-fn is_path_matched[BodyReader](
+fn[BodyReader] is_path_matched(
   self : Route[BodyReader],
   request : Request
 ) -> Bool {

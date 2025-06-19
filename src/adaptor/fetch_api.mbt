@@ -1,5 +1,7 @@
 ///|
-pub extern type FetchApiRequest
+#external
+pub type FetchApiRequest
+
 ///|
 pub fn FetchApiRequest::request(self : FetchApiRequest) -> @lib.Request {
   @lib.Request::new(
@@ -70,6 +72,7 @@ extern "js" fn js_response_text(
   #| (self, resolve, reject) => self.text().then(resolve).catch(reject)
 
 ///|
+
 ///|
 fn method_(self : FetchApiRequest) -> String {
   self._stringPropertiy("method")
@@ -160,14 +163,16 @@ impl Show for FetchApiRequest with output(self, logger) {
 }
 
 ///|
-priv extern type FetchApiHeaders
+#external
+priv type FetchApiHeaders
 
 ///|
 extern "js" fn _entries(self : FetchApiHeaders) -> Array[Array[String]] =
   #| (self) => Array.from(self.entries())
 
 ///|
-pub extern type FetchApiResponse
+#external
+pub type FetchApiResponse
 
 ///|
 impl Show for FetchApiResponse with output(_, logger) {

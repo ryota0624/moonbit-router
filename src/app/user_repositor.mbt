@@ -53,11 +53,13 @@ fn userRepositoryOnSqlite(
   }
 }
 
+///|
 trait UsesSqliteDatabase {
   sqlite(Self) -> SqliteDatabase
 }
+
 ///| 
-fn userRepositoryOnSqlite2[Env: UsesSqliteDatabase](
+fn[Env : UsesSqliteDatabase] userRepositoryOnSqlite2(
   env : Env
 ) -> UserRepository[SqliteExecutionContext] {
   let db = env.sqlite()

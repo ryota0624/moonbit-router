@@ -23,7 +23,7 @@ impl UsesGcsClient for AppEnv with gcs(self : AppEnv) -> GcsClient {
 }
 
 ///|
-fn App::new() -> App!Async {
+fn App::new() -> App raise Async {
   let sqlite = SqliteDatabase::new()
   let user_repository = userRepositoryOnSqlite(sqlite)
   let gcs = GcsClient::new()
@@ -59,7 +59,7 @@ struct RegisterUserUseCase[UseRepositoryCtx, ProfileImageUploaderCtx] {
 }
 
 ///|
-pub fn RegisterUserUseCase::new[UseRepositoryCtx, ProfileImageUploaderCtx](
+pub fn[UseRepositoryCtx, ProfileImageUploaderCtx] RegisterUserUseCase::new(
   user_repository : UserRepository[UseRepositoryCtx],
   profile_image_uploader : ProfileImageUploader[ProfileImageUploaderCtx]
 ) -> RegisterUserUseCase[UseRepositoryCtx, ProfileImageUploaderCtx] {

@@ -8,6 +8,7 @@ pub struct Router[BodyReader] {
 
 ///|
 pub type ErrorHandler (Request, Error) -> Response!Error + Async
+
 ///|
 
 ///|
@@ -23,7 +24,7 @@ pub fn default_error_handler() -> ErrorHandler {
 }
 
 ///|
-pub fn Router::new[Reader : BodyReader](
+pub fn[Reader : BodyReader] Router::new(
   pre_middleware~ : Array[PreMiddlewareFunc],
   post_middleware~ : Array[PostMiddlewareFunc],
   routes : Array[Route[Reader]],
@@ -76,11 +77,11 @@ test "Router::process内ではpre_middleware -> handler -> post_middlewareの順
       pre_middleware=[
         fn(request, next) {
           called.push("pre_middleware1")
-          next!(request)
+          next(request)
         },
         fn(request, next) {
           called.push("pre_middleware2")
-          next!(request)
+          next(request)
         },
       ],
       post_middleware=[
@@ -106,14 +107,16 @@ test "Router::process内ではpre_middleware -> handler -> post_middlewareの順
       default_error_handler(),
     )
     try {
-      let _ = router.process!(
+      let _ = router.process(
         Request::from(
           url="http://example.com/test".to_string(),
           method_="GET".to_string(),
         ),
         FakeBodyReader::default(),
       )
-      assert_eq!(called, ["pre_middleware1", "pre_middleware2" , "handler", "post_middleware1", "post_middleware2"])
+      assert_eq(called, [
+        "pre_middleware1", "pre_middleware2", "handler", "post_middleware1", "post_middleware2",
+      ])
     } catch {
       err => println("Error: " + err.to_string())
     }
@@ -121,7 +124,7 @@ test "Router::process内ではpre_middleware -> handler -> post_middlewareの順
 }
 
 ///|
-fn Router::select_route[Reader : BodyReader](
+fn[Reader : BodyReader] Router::select_route(
   self : Router[Reader],
   request : Request
 ) -> Route[Reader]? {

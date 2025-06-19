@@ -42,14 +42,12 @@ pub fn Request::new(
   }
 }
 
-fn Request::from(
-  url~ : String,
-  method_~ : String,
-)-> Request {
+///|
+fn Request::from(url~ : String, method_~ : String) -> Request {
   Request::{
     headers: Headers::new(@immut/list.from_array([])),
-    url: url,
-    method_: method_,
+    url,
+    method_,
     referrer: "".to_string(),
     mode: "cors".to_string(),
     destination: "document".to_string(),

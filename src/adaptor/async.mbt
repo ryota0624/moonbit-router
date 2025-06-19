@@ -1,2 +1,4 @@
 ///|
-async fn suspend[T, E : Error](f : ((T) -> Unit, (E) -> Unit) -> Unit) -> T!E = "%async.suspend"
+async fn[T, E : Error] suspend(
+  f : ((T) -> Unit, (E) -> Unit) -> Unit
+) -> T raise E = "%async.suspend"

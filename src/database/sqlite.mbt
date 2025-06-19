@@ -2,10 +2,12 @@
 pub fn cos(d : Double) -> Double = "Math" "cos"
 
 ///|
-pub extern type SqliteDatabase
+#external
+pub type SqliteDatabase
 
 ///|
-pub extern type DatabaseStatement
+#external
+pub type DatabaseStatement
 
 ///|
 pub struct DatabaseStatementParameter {
@@ -14,18 +16,21 @@ pub struct DatabaseStatementParameter {
 }
 
 ///|
-pub extern type ResultSet
+#external
+pub type ResultSet
+
 ///|
 extern "js" fn ResultSet::_asJsonString(self : ResultSet) -> String =
   #| (self) => JSON.stringify(self)
 
 ///|
-pub fn ResultSet::asJson(self : ResultSet) -> Json!@json.ParseError {
-  @json.parse!(self._asJsonString())
+pub fn ResultSet::asJson(self : ResultSet) -> Json raise @json.ParseError {
+  @json.parse(self._asJsonString())
 }
+
 ///|
-pub fn ResultSet::cast[To : @json.FromJson](self : ResultSet) -> To!Error {
-  @json.from_json!(self.asJson!())
+pub fn[To : @json.FromJson] ResultSet::cast(self : ResultSet) -> To raise Error {
+  @json.from_json(self.asJson())
 }
 
 ///|
@@ -56,8 +61,7 @@ extern "js" fn DatabaseStatement::_run(
 extern "js" fn DatabaseStatement::finalize(self : DatabaseStatement) -> Unit =
   #| (self) => self.finalize()
 
-///| import { Database } from "bun:sqlite";
-/// const db = new Database("mydb.sqlite");
+///|
 extern "js" fn database(
   initialize : String,
   as_readonly~ : Bool,
@@ -106,6 +110,6 @@ pub async fn SqliteDatabase::run(
 ///|
 test {
   let number = "\"123\""
-  let parsed_number = @json.parse!(number)
+  let parsed_number = @json.parse(number)
   println(parsed_number)
 }
