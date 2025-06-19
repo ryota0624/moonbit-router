@@ -80,8 +80,8 @@ pub async fn SqliteDatabase::new(
   as_readonly~ : Bool = false,
   with_create~ : Bool = false,
   strict~ : Bool = false
-) -> SqliteDatabase!Async + Error {
-  suspend!(fn(resolve, reject) {
+) -> SqliteDatabase raise {
+  suspend(fn(resolve, reject) {
     database(initialize, as_readonly~, with_create~, strict~, resolve, reject)
   })
 }
@@ -89,22 +89,18 @@ pub async fn SqliteDatabase::new(
 ///|
 pub async fn SqliteDatabase::all(
   self : DatabaseStatement
-) -> Array[ResultSet]!Async + Error {
-  suspend!(fn(resolve, reject) { self._all(resolve, reject) })
+) -> Array[ResultSet] raise {
+  suspend(fn(resolve, reject) { self._all(resolve, reject) })
 }
 
 ///|
-pub async fn SqliteDatabase::get(
-  self : DatabaseStatement
-) -> ResultSet!Async + Error {
-  suspend!(fn(resolve, reject) { self._get(resolve, reject) })
+pub async fn SqliteDatabase::get(self : DatabaseStatement) -> ResultSet raise {
+  suspend(fn(resolve, reject) { self._get(resolve, reject) })
 }
 
 ///|
-pub async fn SqliteDatabase::run(
-  self : DatabaseStatement
-) -> Unit!Async + Error {
-  suspend!(fn(resolve, reject) { self._run(resolve, reject) })
+pub async fn SqliteDatabase::run(self : DatabaseStatement) -> Unit raise {
+  suspend(fn(resolve, reject) { self._run(resolve, reject) })
 }
 
 ///|

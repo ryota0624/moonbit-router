@@ -1,9 +1,8 @@
 ///|
-pub type PreMiddlewareFunc (Request, (Request) -> Response!Error + Async) -> Response!Error +
-Async
+pub type PreMiddlewareFunc async (Request, async (Request) -> Response raise) -> Response raise
 
 ///|
-pub type PostMiddlewareFunc (Request, Response) -> Response!Error + Async
+pub type PostMiddlewareFunc async (Request, Response) -> Response raise
 
 ///|
 pub enum Middleware {
@@ -13,72 +12,73 @@ pub enum Middleware {
 
 ///|
 pub struct MiddlewareChain[BodyReader] {
-  next : (Request, BodyReader) -> Response!Error + Async
+  next : async (Request, BodyReader) -> Response raise
 }
 
 ///|
-fn MiddlewareChain::new[BodyReader](
-  requestHandler : (Request, BodyReader) -> Response!Error + Async
+fn[BodyReader] MiddlewareChain::new(
+  requestHandler : async (Request, BodyReader) -> Response raise
 ) -> MiddlewareChain[BodyReader] {
   MiddlewareChain::{ next: requestHandler }
 }
 
 ///|
-fn MiddlewareChain::add[BodyReader](
+fn[BodyReader] MiddlewareChain::add(
   self : MiddlewareChain[BodyReader],
   middleware : Middleware
 ) -> MiddlewareChain[BodyReader] {
   match middleware {
     PreMiddleware(middleware) =>
       MiddlewareChain::{
-        next: fn(request, bodyReader) -> Response!Error + Async {
+        next: async fn(request, bodyReader) -> Response raise {
           let next = self.next
-          (middleware._)!(request, fn(_) { next!(request, bodyReader) })
+          middleware.inner()(request, async fn(_) { next(request, bodyReader) })
         },
       }
     PostMiddleware(middleware) =>
       MiddlewareChain::{
-        next: fn(request, bodyReader) -> Response!Error + Async {
+        next: fn(request, bodyReader) -> Response raise {
           let next = self.next
-          let response = next!(request, bodyReader)
-          (middleware._)!(request, response)
+          let response = next(request, bodyReader)
+          middleware.inner()(request, response)
         },
       }
   }
 }
 
 ///|
-fn MiddlewareChain::handle[BodyReader](
+async fn[BodyReader] MiddlewareChain::handle(
   self : MiddlewareChain[BodyReader],
   request : Request,
   bodyReader : BodyReader
-) -> Response!Error + Async {
-  (self.next)!(request, bodyReader)
+) -> Response raise {
+  (self.next)(request, bodyReader)
 }
 
 ///|
 pub fn request_logging_middleware() -> PreMiddlewareFunc {
   return fn(
     request : Request,
-    next : (Request) -> Response!Error + Async
-  ) -> Response!Error + Async {
+    next : async (Request) -> Response raise
+  ) -> Response raise {
     println("Request: " + request.to_string())
-    next!(request)
+    next(request)
   }
 }
 
 ///|
 pub fn response_logging_middleware() -> PostMiddlewareFunc {
-  return fn(_ : Request, response : Response) -> Response!Async + Error {
+  return fn(_ : Request, response : Response) -> Response raise {
     println("Response: " + response.to_string())
-    Ok(response).unwrap_or_error!()
+    Ok(response).unwrap_or_error()
   }
 }
 
+///|
 pub fn response_logging_middleware2() -> PostMiddlewareFunc {
-  return fn(_ : Request, response : Response) -> Response!Async + Error {
+  return fn(_ : Request, response : Response) -> Response raise {
     println("Response2: " + response.to_string())
-    Ok(response).unwrap_or_error!()
+    Ok(response).unwrap_or_error()
   }
 }
 
@@ -107,29 +107,29 @@ pub fn BasicAuthMiddleware::new(
 pub fn BasicAuthMiddleware::install(
   self : BasicAuthMiddleware
 ) -> PreMiddlewareFunc {
-  return async fn!(
+  return async fn(
     request : Request,
-    next : (Request) -> Response!Error + Async
-  ) -> Response!Error + Async {
-    self.handle!(request, next)
+    next : async (Request) -> Response raise
+  ) -> Response raise {
+    self.handle(request, next)
   }
 }
 
 ///|
-fn BasicAuthMiddleware::handle(
+async fn BasicAuthMiddleware::handle(
   self : BasicAuthMiddleware,
   request : Request,
-  next : (Request) -> Response!Error + Async
-) -> Response!Error + Async {
+  next : async (Request) -> Response raise
+) -> Response raise {
   let auth_user = request.headers
     .get("authorization")
     .bind(fn(header) {
-      header.split(" ").to_array().get(1).map(fn { value => value.to_string() })
+      header.split(" ").to_array().get(1).map(value => value.to_string())
     })
     .bind(BasicAuthUser::fromAuthorizationHeader)
   let registered = auth_user.filter(fn(user) { self.is_registered(user) })
   match registered {
-    Some(_) => next!(request)
+    Some(_) => next(request)
     None =>
       Response::from_string(
         status_code=401,

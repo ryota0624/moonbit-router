@@ -61,9 +61,9 @@ fn Request::from(url~ : String, method_~ : String) -> Request {
 
 ///|
 pub(open) trait BodyReader {
-  bytes(Self) -> FixedArray[Byte]!Error + Async
-  text(Self) -> String!Error + Async
-  json(Self) -> Json!Error + Async
+  bytes(Self) -> FixedArray[Byte] raise
+  text(Self) -> String raise
+  json(Self) -> Json raise
 }
 
 ///|
@@ -99,19 +99,16 @@ fn FakeBodyReader::copy(
 ///|
 impl BodyReader for FakeBodyReader with bytes(self : FakeBodyReader) -> FixedArray[
   Byte,
-]!Error +
-Async {
+] raise {
   self.bytes
 }
 
 ///|
-impl BodyReader for FakeBodyReader with text(self : FakeBodyReader) -> String!Error +
-Async {
+impl BodyReader for FakeBodyReader with text(self : FakeBodyReader) -> String raise {
   self.text
 }
 
 ///|
-impl BodyReader for FakeBodyReader with json(self : FakeBodyReader) -> Json!Error +
-Async {
+impl BodyReader for FakeBodyReader with json(self : FakeBodyReader) -> Json raise {
   self.json
 }

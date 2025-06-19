@@ -20,24 +20,20 @@ pub fn FetchApiRequest::request(self : FetchApiRequest) -> @lib.Request {
 }
 
 ///|
-pub impl @lib.BodyReader for FetchApiRequest with bytes(
-  self : FetchApiRequest
-) -> FixedArray[Byte]!Error + Async {
-  suspend!(fn(resolve, reject) { self.js_response_bytes(resolve, reject) })
+pub impl @lib.BodyReader for FetchApiRequest with bytes(self : FetchApiRequest) -> FixedArray[
+  Byte,
+] raise {
+  suspend(fn(resolve, reject) { self.js_response_bytes(resolve, reject) })
 }
 
 ///|
-pub impl @lib.BodyReader for FetchApiRequest with text(
-  self : FetchApiRequest
-) -> String!Error + Async {
-  suspend!(fn(resolve, reject) { self.js_response_text(resolve, reject) })
+pub impl @lib.BodyReader for FetchApiRequest with text(self : FetchApiRequest) -> String raise {
+  suspend(fn(resolve, reject) { self.js_response_text(resolve, reject) })
 }
 
 ///|
-pub impl @lib.BodyReader for FetchApiRequest with json(
-  self : FetchApiRequest
-) -> Json!Error + Async {
-  @json.parse?(self.text!()).unwrap_or_error!()
+pub impl @lib.BodyReader for FetchApiRequest with json(self : FetchApiRequest) -> Json raise {
+  @json.parse(self.text())
 }
 
 ///|

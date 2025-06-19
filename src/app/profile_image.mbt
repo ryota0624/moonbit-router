@@ -5,7 +5,7 @@ type ProfileImageUrl String
 
 ///|
 struct ProfileImageUploader[ExecutionContext] {
-  upload : (ExecutionContext, UserId, ProfileImageUrl) -> Unit!Async + Error
+  upload : (ExecutionContext, UserId, ProfileImageUrl) -> Unit raise
 }
 
 ///|

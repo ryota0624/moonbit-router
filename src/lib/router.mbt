@@ -7,7 +7,7 @@ pub struct Router[BodyReader] {
 }
 
 ///|
-pub type ErrorHandler (Request, Error) -> Response!Error + Async
+pub type ErrorHandler (Request, Error) -> Response raise
 
 ///|
 
@@ -34,29 +34,27 @@ pub fn[Reader : BodyReader] Router::new(
 }
 
 ///|
-pub fn Router::process[Reader : BodyReader](
+pub async fn[Reader : BodyReader] Router::process(
   self : Router[Reader],
   request : Request,
   bodyReader : Reader
-) -> Response!Error + Async {
-  try {
-    self._process!(request, bodyReader)
-  } catch {
-    err => (self.error_handler._)!(request, err)
+) -> Response raise {
+  self._process(request, bodyReader) catch {
+    err => self.error_handler.inner()(request, err)
   }
 }
 
 ///|
-fn Router::_process[Reader : BodyReader](
+async fn[Reader : BodyReader] Router::_process(
   self : Router[Reader],
   request : Request,
   bodyReader : Reader
-) -> Response!Error + Async {
+) -> Response raise {
   let route = self.select_route(request)
   if route.is_empty() {
-    fail!("Route not found")
+    fail("Route not found")
   }
-  guard route is Some(route) else { fail!("Route not found") }
+  guard route is Some(route) else { fail("Route not found") }
   let pre_middleware_chain = self.pre_middleware
     .rev()
     .fold(init=MiddlewareChain::{ next: route.handler }, fn(chain, middleware) {
@@ -66,7 +64,7 @@ fn Router::_process[Reader : BodyReader](
     init=pre_middleware_chain,
     fn(chain, middleware) { chain.add(PostMiddleware(middleware)) },
   )
-  post_middleware_chain.handle!(request, bodyReader)
+  post_middleware_chain.handle(request, bodyReader)
 }
 
 ///|

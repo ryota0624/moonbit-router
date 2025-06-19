@@ -1,2 +1,2 @@
 ///|
-type RequestHandler[BodyReader] (Request, BodyReader) -> Response!Error + Async
+type RequestHandler[BodyReader] (Request, BodyReader) -> Response raise

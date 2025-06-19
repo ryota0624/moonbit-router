@@ -23,7 +23,7 @@ impl UsesGcsClient for AppEnv with gcs(self : AppEnv) -> GcsClient {
 }
 
 ///|
-fn App::new() -> App raise Async {
+fn App::new() -> App raise {
   let sqlite = SqliteDatabase::new()
   let user_repository = userRepositoryOnSqlite(sqlite)
   let gcs = GcsClient::new()
@@ -31,7 +31,7 @@ fn App::new() -> App raise Async {
   let use_case = RegisterUserUseCase::new(
     user_repository, profile_image_uploader,
   )
-  let _ = use_case.execute?(
+  let _ = use_case.execute(
     AppCtx::{
       db_ctx: sqlite.startExecutionContext(),
       gcs_ctx: gcs.startExecutionContext(),
@@ -78,10 +78,10 @@ pub fn RegisterUserUseCase::execute(
   ctx : AppCtx,
   user : User,
   profile_image_url : ProfileImageUrl
-) -> Unit!Async + Error {
-  let exists = (self.user_repository.get_user_by_id)!(ctx.db_ctx, user.id)
-  guard exists is None else { return fail!("User already exists") }
-  (self.user_repository.store)!(ctx.db_ctx, user)
-  (self.profile_image_uploader.upload)!(ctx.gcs_ctx, user.id, profile_image_url)
-  Ok(()).unwrap_or_error!()
+) -> Unit raise {
+  let exists = (self.user_repository.get_user_by_id)(ctx.db_ctx, user.id)
+  guard exists is None else { return fail("User already exists") }
+  (self.user_repository.store)(ctx.db_ctx, user)
+  (self.profile_image_uploader.upload)(ctx.gcs_ctx, user.id, profile_image_url)
+  Ok(()).unwrap_or_error()
 }

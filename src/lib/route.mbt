@@ -2,14 +2,14 @@
 pub struct Route[BodyReader] {
   path : String
   methods : @immut/list.T[String]
-  handler : (Request, BodyReader) -> Response!Error + Async
+  handler : async (Request, BodyReader) -> Response raise
 }
 
 ///|
-pub fn Route::new[BodyReader](
+pub fn[BodyReader] Route::new(
   path : String,
   methods : Array[String],
-  handler : (Request, BodyReader) -> Response!Error + Async
+  handler : async (Request, BodyReader) -> Response raise
 ) -> Route[BodyReader] {
   Route::{ path, methods: @immut/list.from_array(methods), handler }
 }
@@ -18,7 +18,7 @@ pub fn Route::new[BodyReader](
 pub fn[BodyReader] Route::from_safe_handler(
   path : String,
   methods : Array[String],
-  handler : (Request, BodyReader) -> Response raise Async
+  handler : (Request, BodyReader) -> Response raise
 ) -> Route[BodyReader] {
   Route::new(path, methods, async fn(req, reader) { handler(req, reader) })
 }
@@ -28,7 +28,7 @@ fn[BodyReader] is_processable_request(
   self : Route[BodyReader],
   request : Request
 ) -> Bool {
-  is_method_matched(self, request) && is_path_matched(self, request)
+  self.is_method_matched(request) && self.is_path_matched(request)
 }
 
 ///|
@@ -63,10 +63,10 @@ fn[BodyReader] is_path_matched(
 }
 
 ///|
-fn Route::process[BodyReader](
+async fn[BodyReader] Route::process(
   self : Route[BodyReader],
   request : Request,
   bodyReader : BodyReader
-) -> Response!Error + Async {
-  (self.handler)!(request, bodyReader)
+) -> Response raise {
+  (self.handler)(request, bodyReader)
 }
